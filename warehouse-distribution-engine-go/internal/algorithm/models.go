@@ -64,6 +64,7 @@ type Move struct {
 
 // DistributionPlan is the final result of the algorithm.
 type DistributionPlan struct {
+	RequestID        string
 	Moves            []Move
 	UnallocatedItems []Product // Items that could not fit anywhere
 }

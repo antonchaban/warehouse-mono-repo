@@ -8,11 +8,55 @@ export default function Dashboard() {
     const [supplyId, setSupplyId] = useState('555');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const [newSupplyWhId, setNewSupplyWhId] = useState('');
+    const [newSupplyProdId, setNewSupplyProdId] = useState('');
+    const [newSupplyQty, setNewSupplyQty] = useState('');
 
     // Нові стейти для створення
     const [showForms, setShowForms] = useState(false);
     const [newWhCapacity, setNewWhCapacity] = useState('');
     const [newProdVolume, setNewProdVolume] = useState('');
+
+    const createSupply = async () => {
+        try {
+            const res = await api.post('/admin/supplies', {
+                warehouseId: parseInt(newSupplyWhId),
+                productId: parseInt(newSupplyProdId),
+                quantity: parseInt(newSupplyQty)
+            });
+
+            console.log("Server response:", res.data); // <-- Дивимось в консоль, що прийшло
+
+            // Більш безпечний спосіб отримати ID
+            // Сервер повертає: "Supply created with ID: 123"
+            let newId = 'unknown';
+            if (typeof res.data === 'string' && res.data.includes('ID:')) {
+                const parts = res.data.split('ID:');
+                if (parts.length > 1) {
+                    newId = parts[1].trim();
+                }
+            } else {
+                // Якщо сервер повернув щось інше, просто беремо supplyId, який ми ввели, або 1
+                newId = '1';
+            }
+
+            alert(`Supply Created! ID from server: ${newId}`);
+
+            // Автоматично підставляємо цей ID у поле запуску
+            if (newId !== 'unknown') {
+                setSupplyId(newId);
+            }
+
+            // Очищаємо поля
+            setNewSupplyWhId('');
+            setNewSupplyProdId('');
+            setNewSupplyQty('');
+
+        } catch (e) {
+            console.error(e); // <-- Виводимо справжню помилку в консоль
+            alert('Supply might be created, but frontend failed to parse response. Check console.');
+        }
+    };
 
     const fetchShipments = async () => {
         try {
@@ -122,6 +166,42 @@ export default function Dashboard() {
                                 />
                                 <button onClick={createProduct} className="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700">
                                     <Plus size={20}/>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Create Supply (Incoming Shipment) */}
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 md:col-span-2 bg-gradient-to-r from-blue-50 to-white">
+                            <h3 className="font-bold mb-4 flex items-center gap-2 text-slate-700">
+                                <Truck size={20} className="text-blue-600"/> Register Incoming Supply
+                            </h3>
+                            <div className="flex flex-wrap gap-4 items-end">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-400 mb-1">Where arrived? (Wh ID)</label>
+                                    <input
+                                        type="number" placeholder="1"
+                                        value={newSupplyWhId} onChange={(e) => setNewSupplyWhId(e.target.value)}
+                                        className="border p-2 rounded w-24"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-400 mb-1">What product? (Prod ID)</label>
+                                    <input
+                                        type="number" placeholder="100"
+                                        value={newSupplyProdId} onChange={(e) => setNewSupplyProdId(e.target.value)}
+                                        className="border p-2 rounded w-24"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-400 mb-1">How many?</label>
+                                    <input
+                                        type="number" placeholder="50"
+                                        value={newSupplyQty} onChange={(e) => setNewSupplyQty(e.target.value)}
+                                        className="border p-2 rounded w-24"
+                                    />
+                                </div>
+                                <button onClick={createSupply} className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 font-medium h-10">
+                                    Register Arrival
                                 </button>
                             </div>
                         </div>

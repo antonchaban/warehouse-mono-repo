@@ -14,8 +14,10 @@ message Empty {}
 
 message DistributionPlan {
   string request_id = 1;
+  int64 source_id = 5;
   repeated Move moves = 2;
   repeated UnallocatedItem unallocated_items = 3;
+  int64 generated_at = 4;
 }
 
 message Move {

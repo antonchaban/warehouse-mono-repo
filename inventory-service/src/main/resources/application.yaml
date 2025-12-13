@@ -5,7 +5,6 @@ spring:
   application:
     name: inventory-service
 
-  # --- ВАЖЛИВО: Вимикаємо безпеку gRPC через конфіг ---
   autoconfigure:
     exclude: net.devh.boot.grpc.server.autoconfigure.GrpcServerSecurityAutoConfiguration
 

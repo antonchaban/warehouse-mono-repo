@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.0
 // - protoc             v6.33.1
-// source: distribution.proto
+// source: api/proto/distribution.proto
 
 package distribution
 
@@ -124,5 +124,5 @@ var DistributionResultReceiver_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "distribution.proto",
+	Metadata: "api/proto/distribution.proto",
 }

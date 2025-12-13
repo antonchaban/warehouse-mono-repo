@@ -30,6 +30,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	// 1. Database Connection
 	dbPool, err := pgxpool.New(ctx, cfg.DatabaseURL)
 	if err != nil {
 		logger.Error("failed to connect to database", "error", err)
@@ -38,43 +39,37 @@ func main() {
 	defer dbPool.Close()
 	logger.Info("connected to database")
 
-	grpcClient, err := grpc.NewClient(cfg.JavaServiceAddr)
-	if err != nil {
-		logger.Error("failed to create grpc client", "error", err)
-	} else {
-		defer func(grpcClient *grpc.Client) {
-			err := grpcClient.Close()
-			if err != nil {
-				logger.Error("failed to close grpc client", "error", err)
-			}
-		}(grpcClient)
-		logger.Info("connected to java service", "addr", cfg.JavaServiceAddr)
-	}
-
+	// 2. Init Dependencies
 	repo := postgres.NewRepository(dbPool)
 	algo := algorithm.NewWFDAlgorithm()
-
 	var sender app.ResultSender
 
+	// 3. gRPC Client Logic (ВИПРАВЛЕНО: прибрано дублювання)
 	if cfg.MockOutput {
 		logger.Info("using MOCK sender (results will be logged, not sent via network)")
 		sender = &noopSender{l: logger}
 	} else {
+		// Створюємо клієнт тільки якщо НЕ мок
 		grpcClient, err := grpc.NewClient(cfg.JavaServiceAddr)
 		if err != nil {
-			logger.Error("failed to create grpc client", "error", err)
-		}
-
-		if grpcClient != nil {
-			sender = grpcClient
-		} else {
-			logger.Warn("gRPC client creation failed, falling back to noopSender")
+			logger.Error("failed to create grpc client, falling back to mock", "error", err)
 			sender = &noopSender{l: logger}
+		} else {
+			// Закриваємо з'єднання при виході
+			defer func() {
+				if err := grpcClient.Close(); err != nil {
+					logger.Error("failed to close grpc client", "error", err)
+				}
+			}()
+			logger.Info("connected to java service", "addr", cfg.JavaServiceAddr)
+			sender = grpcClient
 		}
 	}
 
+	// 4. Create Service
 	distributionService := app.NewService(repo, algo, sender, logger)
 
+	// 5. RabbitMQ Consumer
 	consumer := rabbitmq.NewConsumer(
 		cfg.RabbitMQURL,
 		cfg.QueueName,
@@ -102,11 +97,16 @@ func main() {
 	logger.Info("service stopped")
 }
 
+// --- MOCK IMPLEMENTATION ---
+
 type noopSender struct {
 	l *slog.Logger
 }
 
-func (n *noopSender) SendPlan(ctx context.Context, plan algorithm.DistributionPlan) error {
-	n.l.Info("mock sender: plan calculated", "moves", len(plan.Moves))
+func (n *noopSender) SendPlan(ctx context.Context, plan algorithm.DistributionPlan, sourceID int64) error {
+	n.l.Info("mock sender: plan calculated",
+		"moves", len(plan.Moves),
+		"source_id", sourceID,
+	)
 	return nil
 }

@@ -13,12 +13,12 @@ import (
 type StateProvider interface {
 	FetchWorldState(ctx context.Context) ([]*algorithm.Warehouse, error)
 	FetchPendingItems(ctx context.Context, supplyID int64) ([]algorithm.Product, error)
+	GetWarehouseIDBySupplyID(ctx context.Context, supplyID int64) (int64, error)
 }
 
 // ResultSender defines the contract for sending the calculation result.
-// Usually implemented by a gRPC client or a message queue producer.
 type ResultSender interface {
-	SendPlan(ctx context.Context, plan algorithm.DistributionPlan) error
+	SendPlan(ctx context.Context, plan algorithm.DistributionPlan, sourceID int64) error
 }
 
 // Service is the main orchestrator of the business logic.
@@ -30,7 +30,6 @@ type Service struct {
 	logger   *slog.Logger
 }
 
-// NewService creates a new instance of the application service with required dependencies.
 func NewService(
 	p StateProvider,
 	a algorithm.Packer,
@@ -51,30 +50,35 @@ func (s *Service) CalculateDistribution(ctx context.Context, requestID string, s
 		"supply_id", supplyID,
 	)
 
+	// 1. Get warehouse ID from database
+	sourceID, err := s.provider.GetWarehouseIDBySupplyID(ctx, supplyID)
+	if err != nil {
+		return fmt.Errorf("failed to determine source warehouse: %w", err)
+	}
+	s.logger.Info("identified source warehouse", "source_id", sourceID)
+
+	// 2. Get world state
 	warehouses, err := s.provider.FetchWorldState(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to fetch world state: %w", err)
 	}
 
+	// 3. Get pending items
 	items, err := s.provider.FetchPendingItems(ctx, supplyID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch pending items: %w", err)
 	}
 
-	s.logger.Info("data loaded",
-		"warehouses_count", len(warehouses),
-		"items_count", len(items))
+	s.logger.Info("data loaded", "warehouses", len(warehouses), "items", len(items))
 
-	plan := s.algo.Distribute(warehouses, items)
+	// 4. Calculate distribution
+	plan := s.algo.Distribute(requestID, warehouses, items)
 
-	s.logger.Info("calculation completed",
-		"moves_generated", len(plan.Moves),
-		"unallocated_count", len(plan.UnallocatedItems))
-
-	if err := s.sender.SendPlan(ctx, plan); err != nil {
+	// 5. Send result
+	if err := s.sender.SendPlan(ctx, plan, sourceID); err != nil {
 		return fmt.Errorf("failed to send distribution plan: %w", err)
 	}
 
-	s.logger.Info("distribution plan sent successfully", "request_id", requestID)
+	s.logger.Info("plan sent", "request_id", requestID)
 	return nil
 }

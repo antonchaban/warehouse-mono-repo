@@ -29,23 +29,23 @@ CREATE TABLE IF NOT EXISTS shipment_items (
     quantity INT NOT NULL
     );
 
--- --- SEED DATA (Тестові дані) ---
+-- --- SEED DATA (Test data) ---
 
--- 1. Склади (Warehouses)
--- WH-BIG: Майже повний (Load Balancing має уникати його)
+-- 1. Warehouses
+-- WH-BIG: Almost full (Load Balancing should avoid it)
 INSERT INTO warehouses (id, total_capacity) VALUES ('WH-BIG', 100.0);
--- WH-SMALL: Порожній (Алгоритм має обрати його)
+-- WH-SMALL: Empty (Algorithm should choose it)
 INSERT INTO warehouses (id, total_capacity) VALUES ('WH-SMALL', 50.0);
 
--- 2. Товари (Products)
+-- 2. Products
 INSERT INTO products (id, volume_m3) VALUES ('IPHONE', 0.1);
 INSERT INTO products (id, volume_m3) VALUES ('FRIDGE', 2.0);
 
--- 3. Поточні залишки (Stock)
--- WH-BIG заповнений на 90 одиниць (90% capacity used)
+-- 3. Current stock levels
+-- WH-BIG is filled with 90 units (90% capacity used)
 INSERT INTO stock_levels (warehouse_id, product_id, quantity) VALUES ('WH-BIG', 'FRIDGE', 45); -- 45 * 2.0 = 90.0 m3
 
--- 4. Запити на розподіл (Pending Shipments)
--- Ми створюємо "віртуальну" накладну, яку треба розподілити
+-- 4. Pending distribution requests
+-- Create a "virtual" shipment to be distributed
 INSERT INTO shipments (id, status, destination_id) VALUES ('SHIP-001', 'PENDING', NULL);
 INSERT INTO shipment_items (shipment_id, product_id, quantity) VALUES ('SHIP-001', 'FRIDGE', 2); -- 4 m3 total

@@ -79,6 +79,18 @@ func (r *Repository) FetchWorldState(ctx context.Context) ([]*algorithm.Warehous
 	return warehouses, nil
 }
 
+func (r *Repository) GetWarehouseIDBySupplyID(ctx context.Context, supplyID int64) (int64, error) {
+	var warehouseID int64
+	query := `SELECT warehouse_id FROM supplies WHERE id = $1`
+
+	err := r.pool.QueryRow(ctx, query, supplyID).Scan(&warehouseID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get warehouse_id for supply %d: %w", supplyID, err)
+	}
+
+	return warehouseID, nil
+}
+
 func (r *Repository) FetchPendingItems(ctx context.Context, supplyID int64) ([]algorithm.Product, error) {
 	const query = `
 		SELECT 

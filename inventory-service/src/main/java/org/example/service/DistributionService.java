@@ -6,14 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.entity.*;
 import org.example.grpc.DistributionPlan;
 import org.example.grpc.Move;
-import org.example.repository.ShipmentRepository;
-import org.example.repository.SupplyRepository;
+import org.example.repository.*;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -21,43 +17,74 @@ import java.util.stream.Collectors;
 public class DistributionService {
 
     private final ShipmentRepository shipmentRepository;
+    private final WarehouseRepository warehouseRepository;
+    private final ProductRepository productRepository;
+    private final ShipmentItemRepository shipmentItemRepository;
     private final SupplyRepository supplyRepository;
 
     @Transactional
     public void applyDistributionPlan(DistributionPlan plan) {
-        log.info("Applying distribution plan for Request ID: {}, Moves: {}",
-                plan.getRequestId(), plan.getMovesCount());
+        log.info("Processing plan for Request ID: {}", plan.getRequestId());
 
-        Map<Long, List<Move>> movesByDestination = plan.getMovesList().stream()
-                .collect(Collectors.groupingBy(move -> Long.parseLong(move.getWarehouseId())));
+        long rawSourceId = plan.getSourceId();
+        final long sourceId = (rawSourceId == 0) ? 1L : rawSourceId;
 
-        List<Shipment> shipmentsToSave = new ArrayList<>();
-
-        for (Map.Entry<Long, List<Move>> entry : movesByDestination.entrySet()) {
-            Long destinationId = entry.getKey();
-            List<Move> moves = entry.getValue();
-
-            Shipment shipment = new Shipment();
-            shipment.setDestinationId(destinationId);
-            shipment.setStatus(ShipmentStatus.PLANNED);
-
-            shipment.setSourceId(1L);
-
-            List<ShipmentItem> items = new ArrayList<>();
-            for (Move move : moves) {
-                ShipmentItem item = new ShipmentItem();
-                item.setShipment(shipment);
-                item.setProductId(Long.parseLong(move.getProductId()));
-                item.setQuantity(move.getQuantity());
-                items.add(item);
-            }
-
-            shipment.setItems(items);
-            shipmentsToSave.add(shipment);
+        if (rawSourceId == 0) {
+            log.warn("Warning: Source ID is 0! Using fallback ID = 1.");
         }
 
-        shipmentRepository.saveAll(shipmentsToSave);
+        Warehouse sourceWarehouse = warehouseRepository.findById(sourceId)
+                .orElseThrow(() -> new RuntimeException("Source warehouse not found: " + sourceId));
 
-        log.info("Successfully created {} shipments from plan", shipmentsToSave.size());
+        for (Move move : plan.getMovesList()) {
+            Long destId = Long.parseLong(move.getWarehouseId());
+            Long prodId = Long.parseLong(move.getProductId());
+
+            Warehouse destWarehouse = warehouseRepository.findById(destId)
+                    .orElseThrow(() -> new RuntimeException("Destination warehouse not found: " + destId));
+
+            Product product = productRepository.findById(prodId)
+                    .orElseThrow(() -> new RuntimeException("Product not found: " + prodId));
+
+            Shipment shipment = new Shipment();
+            shipment.setSource(sourceWarehouse);
+            shipment.setDestination(destWarehouse);
+            shipment.setStatus("PLANNED");
+            shipment.setCreatedBy("system_algo");
+            shipment.setCreatedAt(LocalDateTime.now());
+            shipment.setLastModifiedBy("system_algo");
+
+            shipment = shipmentRepository.save(shipment);
+
+            ShipmentItem item = new ShipmentItem();
+            item.setShipment(shipment);
+            item.setProduct(product);
+            item.setQuantity(move.getQuantity());
+
+            shipmentItemRepository.save(item);
+
+            log.info("Saved Shipment #{} ({} -> {})", shipment.getId(), sourceId, destId);
+        }
+        if (plan.getUnallocatedItemsCount() > 0) {
+            log.warn("⚠️ ALARM: Some items could not be allocated!");
+
+            for (org.example.grpc.UnallocatedItem unallocated : plan.getUnallocatedItemsList()) {
+                log.error("❌ Product ID {} (Volume: {}) failed. Reason: {}",
+                        unallocated.getProductId(),
+                        unallocated.getVolumeM3(),
+                        unallocated.getReason()
+                );
+
+                // todo save to DB table for unallocated items
+            }
+        } else {
+            log.info("✅ Perfect! All items were allocated successfully.");
+        }
+        Supply supply = supplyRepository.findById(plan.getSourceId()).orElse(null);
+        if (supply != null) {
+            supply.setStatus(SupplyStatus.valueOf("PROCESSED"));
+            supplyRepository.save(supply);
+            log.info("Supply #{} status updated to PROCESSED", supply.getId());
+        }
     }
 }

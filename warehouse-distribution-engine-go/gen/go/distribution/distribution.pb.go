@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.10
 // 	protoc        v6.33.1
-// source: distribution.proto
+// source: api/proto/distribution.proto
 
 package distribution
 
@@ -29,7 +29,7 @@ type Empty struct {
 
 func (x *Empty) Reset() {
 	*x = Empty{}
-	mi := &file_distribution_proto_msgTypes[0]
+	mi := &file_api_proto_distribution_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -41,7 +41,7 @@ func (x *Empty) String() string {
 func (*Empty) ProtoMessage() {}
 
 func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_distribution_proto_msgTypes[0]
+	mi := &file_api_proto_distribution_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -54,21 +54,23 @@ func (x *Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Empty.ProtoReflect.Descriptor instead.
 func (*Empty) Descriptor() ([]byte, []int) {
-	return file_distribution_proto_rawDescGZIP(), []int{0}
+	return file_api_proto_distribution_proto_rawDescGZIP(), []int{0}
 }
 
 type DistributionPlan struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	RequestId        string                 `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	SourceId         int64                  `protobuf:"varint,5,opt,name=source_id,json=sourceId,proto3" json:"source_id,omitempty"`
 	Moves            []*Move                `protobuf:"bytes,2,rep,name=moves,proto3" json:"moves,omitempty"`
 	UnallocatedItems []*UnallocatedItem     `protobuf:"bytes,3,rep,name=unallocated_items,json=unallocatedItems,proto3" json:"unallocated_items,omitempty"`
+	GeneratedAt      int64                  `protobuf:"varint,4,opt,name=generated_at,json=generatedAt,proto3" json:"generated_at,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
 
 func (x *DistributionPlan) Reset() {
 	*x = DistributionPlan{}
-	mi := &file_distribution_proto_msgTypes[1]
+	mi := &file_api_proto_distribution_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -80,7 +82,7 @@ func (x *DistributionPlan) String() string {
 func (*DistributionPlan) ProtoMessage() {}
 
 func (x *DistributionPlan) ProtoReflect() protoreflect.Message {
-	mi := &file_distribution_proto_msgTypes[1]
+	mi := &file_api_proto_distribution_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -93,7 +95,7 @@ func (x *DistributionPlan) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DistributionPlan.ProtoReflect.Descriptor instead.
 func (*DistributionPlan) Descriptor() ([]byte, []int) {
-	return file_distribution_proto_rawDescGZIP(), []int{1}
+	return file_api_proto_distribution_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *DistributionPlan) GetRequestId() string {
@@ -101,6 +103,13 @@ func (x *DistributionPlan) GetRequestId() string {
 		return x.RequestId
 	}
 	return ""
+}
+
+func (x *DistributionPlan) GetSourceId() int64 {
+	if x != nil {
+		return x.SourceId
+	}
+	return 0
 }
 
 func (x *DistributionPlan) GetMoves() []*Move {
@@ -117,6 +126,13 @@ func (x *DistributionPlan) GetUnallocatedItems() []*UnallocatedItem {
 	return nil
 }
 
+func (x *DistributionPlan) GetGeneratedAt() int64 {
+	if x != nil {
+		return x.GeneratedAt
+	}
+	return 0
+}
+
 type Move struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ProductId     string                 `protobuf:"bytes,1,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
@@ -129,7 +145,7 @@ type Move struct {
 
 func (x *Move) Reset() {
 	*x = Move{}
-	mi := &file_distribution_proto_msgTypes[2]
+	mi := &file_api_proto_distribution_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -141,7 +157,7 @@ func (x *Move) String() string {
 func (*Move) ProtoMessage() {}
 
 func (x *Move) ProtoReflect() protoreflect.Message {
-	mi := &file_distribution_proto_msgTypes[2]
+	mi := &file_api_proto_distribution_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -154,7 +170,7 @@ func (x *Move) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Move.ProtoReflect.Descriptor instead.
 func (*Move) Descriptor() ([]byte, []int) {
-	return file_distribution_proto_rawDescGZIP(), []int{2}
+	return file_api_proto_distribution_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Move) GetProductId() string {
@@ -189,14 +205,14 @@ type UnallocatedItem struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ProductId     string                 `protobuf:"bytes,1,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
 	VolumeM3      float64                `protobuf:"fixed64,2,opt,name=volume_m3,json=volumeM3,proto3" json:"volume_m3,omitempty"`
-	Reason        string                 `protobuf:"bytes,3,opt,name=reason,proto3" json:"reason,omitempty"` // e.g. "No capacity"
+	Reason        string                 `protobuf:"bytes,3,opt,name=reason,proto3" json:"reason,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *UnallocatedItem) Reset() {
 	*x = UnallocatedItem{}
-	mi := &file_distribution_proto_msgTypes[3]
+	mi := &file_api_proto_distribution_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -208,7 +224,7 @@ func (x *UnallocatedItem) String() string {
 func (*UnallocatedItem) ProtoMessage() {}
 
 func (x *UnallocatedItem) ProtoReflect() protoreflect.Message {
-	mi := &file_distribution_proto_msgTypes[3]
+	mi := &file_api_proto_distribution_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -221,7 +237,7 @@ func (x *UnallocatedItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnallocatedItem.ProtoReflect.Descriptor instead.
 func (*UnallocatedItem) Descriptor() ([]byte, []int) {
-	return file_distribution_proto_rawDescGZIP(), []int{3}
+	return file_api_proto_distribution_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *UnallocatedItem) GetProductId() string {
@@ -245,17 +261,19 @@ func (x *UnallocatedItem) GetReason() string {
 	return ""
 }
 
-var File_distribution_proto protoreflect.FileDescriptor
+var File_api_proto_distribution_proto protoreflect.FileDescriptor
 
-const file_distribution_proto_rawDesc = "" +
+const file_api_proto_distribution_proto_rawDesc = "" +
 	"\n" +
-	"\x12distribution.proto\x12\fdistribution\"\a\n" +
-	"\x05Empty\"\xa7\x01\n" +
+	"\x1capi/proto/distribution.proto\x12\fdistribution\"\a\n" +
+	"\x05Empty\"\xe7\x01\n" +
 	"\x10DistributionPlan\x12\x1d\n" +
 	"\n" +
-	"request_id\x18\x01 \x01(\tR\trequestId\x12(\n" +
+	"request_id\x18\x01 \x01(\tR\trequestId\x12\x1b\n" +
+	"\tsource_id\x18\x05 \x01(\x03R\bsourceId\x12(\n" +
 	"\x05moves\x18\x02 \x03(\v2\x12.distribution.MoveR\x05moves\x12J\n" +
-	"\x11unallocated_items\x18\x03 \x03(\v2\x1d.distribution.UnallocatedItemR\x10unallocatedItems\"\x81\x01\n" +
+	"\x11unallocated_items\x18\x03 \x03(\v2\x1d.distribution.UnallocatedItemR\x10unallocatedItems\x12!\n" +
+	"\fgenerated_at\x18\x04 \x01(\x03R\vgeneratedAt\"\x81\x01\n" +
 	"\x04Move\x12\x1d\n" +
 	"\n" +
 	"product_id\x18\x01 \x01(\tR\tproductId\x12!\n" +
@@ -271,25 +289,25 @@ const file_distribution_proto_rawDesc = "" +
 	"\vProcessPlan\x12\x1e.distribution.DistributionPlan\x1a\x13.distribution.EmptyBMZKgithub.com/antonchaban/warehouse-distribution-engine-go/gen/go/distributionb\x06proto3"
 
 var (
-	file_distribution_proto_rawDescOnce sync.Once
-	file_distribution_proto_rawDescData []byte
+	file_api_proto_distribution_proto_rawDescOnce sync.Once
+	file_api_proto_distribution_proto_rawDescData []byte
 )
 
-func file_distribution_proto_rawDescGZIP() []byte {
-	file_distribution_proto_rawDescOnce.Do(func() {
-		file_distribution_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_distribution_proto_rawDesc), len(file_distribution_proto_rawDesc)))
+func file_api_proto_distribution_proto_rawDescGZIP() []byte {
+	file_api_proto_distribution_proto_rawDescOnce.Do(func() {
+		file_api_proto_distribution_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_api_proto_distribution_proto_rawDesc), len(file_api_proto_distribution_proto_rawDesc)))
 	})
-	return file_distribution_proto_rawDescData
+	return file_api_proto_distribution_proto_rawDescData
 }
 
-var file_distribution_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
-var file_distribution_proto_goTypes = []any{
+var file_api_proto_distribution_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_api_proto_distribution_proto_goTypes = []any{
 	(*Empty)(nil),            // 0: distribution.Empty
 	(*DistributionPlan)(nil), // 1: distribution.DistributionPlan
 	(*Move)(nil),             // 2: distribution.Move
 	(*UnallocatedItem)(nil),  // 3: distribution.UnallocatedItem
 }
-var file_distribution_proto_depIdxs = []int32{
+var file_api_proto_distribution_proto_depIdxs = []int32{
 	2, // 0: distribution.DistributionPlan.moves:type_name -> distribution.Move
 	3, // 1: distribution.DistributionPlan.unallocated_items:type_name -> distribution.UnallocatedItem
 	1, // 2: distribution.DistributionResultReceiver.ProcessPlan:input_type -> distribution.DistributionPlan
@@ -301,26 +319,26 @@ var file_distribution_proto_depIdxs = []int32{
 	0, // [0:2] is the sub-list for field type_name
 }
 
-func init() { file_distribution_proto_init() }
-func file_distribution_proto_init() {
-	if File_distribution_proto != nil {
+func init() { file_api_proto_distribution_proto_init() }
+func file_api_proto_distribution_proto_init() {
+	if File_api_proto_distribution_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_distribution_proto_rawDesc), len(file_distribution_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_proto_distribution_proto_rawDesc), len(file_api_proto_distribution_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_distribution_proto_goTypes,
-		DependencyIndexes: file_distribution_proto_depIdxs,
-		MessageInfos:      file_distribution_proto_msgTypes,
+		GoTypes:           file_api_proto_distribution_proto_goTypes,
+		DependencyIndexes: file_api_proto_distribution_proto_depIdxs,
+		MessageInfos:      file_api_proto_distribution_proto_msgTypes,
 	}.Build()
-	File_distribution_proto = out.File
-	file_distribution_proto_goTypes = nil
-	file_distribution_proto_depIdxs = nil
+	File_api_proto_distribution_proto = out.File
+	file_api_proto_distribution_proto_goTypes = nil
+	file_api_proto_distribution_proto_depIdxs = nil
 }

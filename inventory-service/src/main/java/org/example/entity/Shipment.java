@@ -2,29 +2,33 @@ package org.example.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-
+import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
 @Entity
-@EqualsAndHashCode(callSuper = true)
 @Table(name = "shipments")
-public class Shipment extends AuditableEntity{
+@Data
+public class Shipment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "source_id", nullable = false)
-    private Long sourceId;
+    @ManyToOne
+    @JoinColumn(name = "source_id")
+    private Warehouse source;
 
-    @Column(name = "destination_id", nullable = false)
-    private Long destinationId;
+    @ManyToOne
+    @JoinColumn(name = "destination_id")
+    private Warehouse destination;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ShipmentStatus status;
+    private String status;
 
-    @OneToMany(mappedBy = "shipment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "shipment", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<ShipmentItem> items;
+
+    private String createdBy;
+    private LocalDateTime createdAt = LocalDateTime.now();
+    private String lastModifiedBy;
+    private LocalDateTime lastModifiedAt = LocalDateTime.now();
 }

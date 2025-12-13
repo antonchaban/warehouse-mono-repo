@@ -6,6 +6,8 @@ import (
 	"github.com/antonchaban/warehouse-distribution-engine-go/internal/algorithm"
 )
 
+const testRequestID = "test-request"
+
 func TestDistribute_SingleItemSingleWarehouse_AllocatesSuccessfully(t *testing.T) {
 	warehouses := []*algorithm.Warehouse{
 		{ID: "WH-1", TotalCapacityM3: 100.0, CurrentStockM3: 0, IncomingM3: 0},
@@ -15,7 +17,7 @@ func TestDistribute_SingleItemSingleWarehouse_AllocatesSuccessfully(t *testing.T
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 1 {
 		t.Fatalf("expected 1 move, got %d", len(plan.Moves))
@@ -36,7 +38,7 @@ func TestDistribute_NoWarehouses_AllItemsUnallocated(t *testing.T) {
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 0 {
 		t.Fatalf("expected 0 moves, got %d", len(plan.Moves))
@@ -53,7 +55,7 @@ func TestDistribute_NoItems_EmptyPlan(t *testing.T) {
 	items := []algorithm.Product{}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 0 {
 		t.Fatalf("expected 0 moves, got %d", len(plan.Moves))
@@ -73,7 +75,7 @@ func TestDistribute_ItemTooLarge_RemainsUnallocated(t *testing.T) {
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 0 {
 		t.Fatalf("expected 0 moves, got %d", len(plan.Moves))
@@ -97,7 +99,7 @@ func TestDistribute_DistributesAcrossMultipleWarehouses(t *testing.T) {
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 2 {
 		t.Fatalf("expected 2 moves, got %d", len(plan.Moves))
@@ -126,7 +128,7 @@ func TestDistribute_LargerItemsAllocatedFirst(t *testing.T) {
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 3 {
 		t.Fatalf("expected 3 moves, got %d", len(plan.Moves))
@@ -153,7 +155,7 @@ func TestDistribute_SameVolume_HigherPriorityFirst(t *testing.T) {
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 3 {
 		t.Fatalf("expected 3 moves, got %d", len(plan.Moves))
@@ -179,7 +181,7 @@ func TestDistribute_PrefersLeastUtilizedWarehouse(t *testing.T) {
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 1 {
 		t.Fatalf("expected 1 move, got %d", len(plan.Moves))
@@ -198,7 +200,7 @@ func TestDistribute_AccountsForIncomingStock(t *testing.T) {
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 0 {
 		t.Fatalf("expected 0 moves, got %d", len(plan.Moves))
@@ -218,7 +220,7 @@ func TestDistribute_FallbackToAlternativeWarehouse(t *testing.T) {
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 1 {
 		t.Fatalf("expected 1 move, got %d", len(plan.Moves))
@@ -237,7 +239,7 @@ func TestDistribute_ExactFit_AllocatesSuccessfully(t *testing.T) {
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 1 {
 		t.Fatalf("expected 1 move, got %d", len(plan.Moves))
@@ -257,7 +259,7 @@ func TestDistribute_FullWarehouse_SkipsIt(t *testing.T) {
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 1 {
 		t.Fatalf("expected 1 move, got %d", len(plan.Moves))
@@ -277,7 +279,7 @@ func TestDistribute_ZeroCapacityWarehouse_TreatedAsFull(t *testing.T) {
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 1 {
 		t.Fatalf("expected 1 move, got %d", len(plan.Moves))
@@ -297,7 +299,7 @@ func TestDistribute_PartialAllocation_SomeItemsUnallocated(t *testing.T) {
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 1 {
 		t.Fatalf("expected 1 move, got %d", len(plan.Moves))
@@ -317,7 +319,7 @@ func TestDistribute_ManySmallItems_AllAllocated(t *testing.T) {
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 100 {
 		t.Fatalf("expected 100 moves, got %d", len(plan.Moves))
@@ -339,7 +341,7 @@ func TestDistribute_BalancesLoadAcrossWarehouses(t *testing.T) {
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 30 {
 		t.Fatalf("expected 30 moves, got %d", len(plan.Moves))
@@ -366,7 +368,7 @@ func TestDistribute_MoveContainsCorrectVolume(t *testing.T) {
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 1 {
 		t.Fatalf("expected 1 move, got %d", len(plan.Moves))
@@ -385,7 +387,7 @@ func TestDistribute_ZeroVolumeItem_AllocatesSuccessfully(t *testing.T) {
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 1 {
 		t.Fatalf("expected 1 move, got %d", len(plan.Moves))
@@ -403,7 +405,7 @@ func TestDistribute_NegativePriority_StillSortsCorrectly(t *testing.T) {
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 3 {
 		t.Fatalf("expected 3 moves, got %d", len(plan.Moves))
@@ -430,7 +432,7 @@ func TestDistribute_AllWarehousesFull_AllItemsUnallocated(t *testing.T) {
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 0 {
 		t.Fatalf("expected 0 moves, got %d", len(plan.Moves))
@@ -451,7 +453,7 @@ func TestDistribute_LargeItemWithSmallItemAfterFallback_BothAllocated(t *testing
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 2 {
 		t.Fatalf("expected 2 moves, got %d", len(plan.Moves))
@@ -472,7 +474,7 @@ func TestDistribute_MultipleItemsExceedCapacity_OnlyFittingItemsAllocated(t *tes
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 2 {
 		t.Fatalf("expected 2 moves, got %d", len(plan.Moves))
@@ -493,7 +495,7 @@ func TestDistribute_DifferentCapacityWarehouses_BalancesByUtilization(t *testing
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 2 {
 		t.Fatalf("expected 2 moves, got %d", len(plan.Moves))
@@ -518,7 +520,7 @@ func TestDistribute_WarehouseWithOnlyIncomingStock_CalculatesCapacityCorrectly(t
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 1 {
 		t.Fatalf("expected 1 move, got %d", len(plan.Moves))
@@ -541,7 +543,7 @@ func TestDistribute_VolumeGreaterThanPriority_VolumeIsSortedFirst(t *testing.T) 
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 2 {
 		t.Fatalf("expected 2 moves, got %d", len(plan.Moves))
@@ -564,7 +566,7 @@ func TestDistribute_SequentialAllocationUpdatesWarehouseState(t *testing.T) {
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 4 {
 		t.Fatalf("expected 4 moves, got %d", len(plan.Moves))
@@ -594,7 +596,7 @@ func TestDistribute_SingleWarehouseMultipleItems_CorrectOrder(t *testing.T) {
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 4 {
 		t.Fatalf("expected 4 moves, got %d", len(plan.Moves))
@@ -624,7 +626,7 @@ func TestDistribute_VerySmallVolumes_HandledCorrectly(t *testing.T) {
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 3 {
 		t.Fatalf("expected 3 moves, got %d", len(plan.Moves))
@@ -644,7 +646,7 @@ func TestDistribute_BothStockAndIncoming_CombinedForUtilization(t *testing.T) {
 	}
 
 	algo := algorithm.NewWFDAlgorithm()
-	plan := algo.Distribute(warehouses, items)
+	plan := algo.Distribute(testRequestID, warehouses, items)
 
 	if len(plan.Moves) != 1 {
 		t.Fatalf("expected 1 move, got %d", len(plan.Moves))

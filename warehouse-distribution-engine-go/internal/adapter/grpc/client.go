@@ -38,7 +38,7 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-func (c *Client) SendPlan(ctx context.Context, plan algorithm.DistributionPlan) error {
+func (c *Client) SendPlan(ctx context.Context, plan algorithm.DistributionPlan, sourceID int64) error {
 	type moveKey struct {
 		WarehouseID string
 		ProductID   string
@@ -81,9 +81,11 @@ func (c *Client) SendPlan(ctx context.Context, plan algorithm.DistributionPlan) 
 	}
 
 	req := &pb.DistributionPlan{
-		RequestId:        "generated-id-placeholder",
+		RequestId:        plan.RequestID,
+		SourceId:         sourceID,
 		Moves:            protoMoves,
 		UnallocatedItems: protoUnallocated,
+		GeneratedAt:      time.Now().Unix(),
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)

@@ -28,7 +28,7 @@ INSERT INTO roles (name) VALUES ('ROLE_ADMIN');
 INSERT INTO roles (name) VALUES ('ROLE_STOREKEEPER');
 INSERT INTO roles (name) VALUES ('ROLE_LOGISTICIAN');
 
--- Пароль: admin123
+-- Password: admin123
 INSERT INTO users (username, password_hash, email, first_name, last_name)
 VALUES ('admin', '$2a$10$wW.w4/1.1234567890123456789012345678901234567890', 'admin@company.com', 'Super', 'Admin');
 

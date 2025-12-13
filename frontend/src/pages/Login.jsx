@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Truck } from 'lucide-react';
 import api from '../api';
 
-export default function Login() {
+export default function Login() { {
     const [username, setUsername] = useState('admin');
     const [password, setPassword] = useState('password');
     const [error, setError] = useState('');
@@ -51,7 +51,11 @@ export default function Login() {
                         Sign In
                     </button>
                 </form>
+                <div className="mt-4 text-center text-sm text-gray-600">
+                    No account? <Link to="/register" className="text-blue-600 hover:underline">Register here</Link>
+                </div>
             </div>
         </div>
     );
+}
 }

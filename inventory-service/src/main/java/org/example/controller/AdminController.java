@@ -1,30 +1,43 @@
 package org.example.controller;
 
-import lombok.RequiredArgsConstructor;
-import org.example.entity.Warehouse;
-import org.example.repository.WarehouseRepository;
+import org.example.dto.CreateRequest;
+import org.example.entity.*;
+import org.example.repository.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin")
-@RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')") // Тільки адмін може створювати
 public class AdminController {
 
-    private final WarehouseRepository warehouseRepository;
+    @Autowired private WarehouseRepository warehouseRepository;
+    @Autowired private ProductRepository productRepository;
 
     @PostMapping("/warehouses")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Warehouse> createWarehouse(@RequestBody Warehouse warehouse) {
-        return ResponseEntity.ok(warehouseRepository.save(warehouse));
+    public ResponseEntity<?> createWarehouse(@RequestBody CreateRequest.Warehouse request) {
+        Warehouse w = new Warehouse();
+        w.setTotalCapacity(request.capacity());
+        w.setCreatedBy(getCurrentUsername());
+        warehouseRepository.save(w);
+        return ResponseEntity.ok("Warehouse created with ID: " + w.getId());
     }
 
-    @GetMapping("/warehouses")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<Warehouse>> getAllWarehouses() {
-        return ResponseEntity.ok(warehouseRepository.findAll());
+    @PostMapping("/products")
+    public ResponseEntity<?> createProduct(@RequestBody CreateRequest.Product request) {
+        Product p = new Product();
+        p.setVolumeM3(request.volume());
+        p.setCreatedBy(getCurrentUsername());
+        productRepository.save(p);
+        return ResponseEntity.ok("Product created with ID: " + p.getId());
+    }
+
+    private String getCurrentUsername() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null ? auth.getName() : "system";
     }
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Play, RefreshCw, Box, ArrowRight, Truck } from 'lucide-react';
+import { LogOut, Play, RefreshCw, Box, ArrowRight, Truck, Plus, Warehouse, Package } from 'lucide-react';
 import api from '../api';
 
 export default function Dashboard() {
@@ -8,6 +8,11 @@ export default function Dashboard() {
     const [supplyId, setSupplyId] = useState('555');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+
+    // Нові стейти для створення
+    const [showForms, setShowForms] = useState(false);
+    const [newWhCapacity, setNewWhCapacity] = useState('');
+    const [newProdVolume, setNewProdVolume] = useState('');
 
     const fetchShipments = async () => {
         try {
@@ -41,6 +46,23 @@ export default function Dashboard() {
         }
     };
 
+    // Функції створення
+    const createWarehouse = async () => {
+        try {
+            await api.post('/admin/warehouses', { capacity: parseFloat(newWhCapacity) });
+            alert('Warehouse Created!');
+            setNewWhCapacity('');
+        } catch (e) { alert('Error creating warehouse'); }
+    };
+
+    const createProduct = async () => {
+        try {
+            await api.post('/admin/products', { volume: parseFloat(newProdVolume) });
+            alert('Product Created!');
+            setNewProdVolume('');
+        } catch (e) { alert('Error creating product'); }
+    };
+
     return (
         <div className="min-h-screen bg-slate-50 text-slate-800">
             {/* Header */}
@@ -56,6 +78,55 @@ export default function Dashboard() {
             </header>
 
             <main className="max-w-7xl mx-auto px-4 py-8">
+
+                {/* Кнопка перемикання режимів */}
+                <div className="mb-6 flex justify-end">
+                    <button
+                        onClick={() => setShowForms(!showForms)}
+                        className="text-sm text-blue-600 underline hover:text-blue-800"
+                    >
+                        {showForms ? "Hide Admin Forms" : "Create New Data (+)"}
+                    </button>
+                </div>
+
+                {/* Секція створення (Показується тільки якщо натиснуто кнопку) */}
+                {showForms && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        {/* Create Warehouse */}
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <h3 className="font-bold mb-4 flex items-center gap-2 text-slate-700">
+                                <Warehouse size={20} className="text-purple-600"/> New Warehouse
+                            </h3>
+                            <div className="flex gap-2">
+                                <input
+                                    type="number" placeholder="Capacity (m³)"
+                                    value={newWhCapacity} onChange={(e) => setNewWhCapacity(e.target.value)}
+                                    className="border p-2 rounded w-full"
+                                />
+                                <button onClick={createWarehouse} className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                                    <Plus size={20}/>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Create Product */}
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <h3 className="font-bold mb-4 flex items-center gap-2 text-slate-700">
+                                <Package size={20} className="text-orange-600"/> New Product Type
+                            </h3>
+                            <div className="flex gap-2">
+                                <input
+                                    type="number" placeholder="Volume (m³)"
+                                    value={newProdVolume} onChange={(e) => setNewProdVolume(e.target.value)}
+                                    className="border p-2 rounded w-full"
+                                />
+                                <button onClick={createProduct} className="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700">
+                                    <Plus size={20}/>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Control Panel */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">

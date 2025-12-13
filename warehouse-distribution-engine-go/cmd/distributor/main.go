@@ -103,11 +103,10 @@ type noopSender struct {
 	l *slog.Logger
 }
 
-// ВИПРАВЛЕНО: Додано аргумент sourceID int64, щоб відповідати новому інтерфейсу
 func (n *noopSender) SendPlan(ctx context.Context, plan algorithm.DistributionPlan, sourceID int64) error {
 	n.l.Info("mock sender: plan calculated",
 		"moves", len(plan.Moves),
-		"source_id", sourceID, // Додано логування ID
+		"source_id", sourceID,
 	)
 	return nil
 }

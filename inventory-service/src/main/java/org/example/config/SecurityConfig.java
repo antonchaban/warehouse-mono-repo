@@ -28,13 +28,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                // 1. Вмикаємо CORS з нашою конфігурацією
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        // 2. Дозволяємо Preflight запити (OPTIONS) для всіх, щоб браузер не лаявся
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
-
-                        // Ваші правила доступу
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/distribution/**").hasAnyRole("LOGISTICIAN", "ADMIN")
@@ -47,21 +43,13 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // 3. Детальна конфігурація CORS
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Дозволяємо фронтенд
         configuration.setAllowedOrigins(List.of("http://localhost:3000"));
-
-        // Дозволяємо всі методи (GET, POST, OPTIONS...)
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
-        // Дозволяємо заголовки (особливо Authorization)
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Cache-Control"));
-
-        // Дозволяємо передавати креденшали (якщо треба)
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

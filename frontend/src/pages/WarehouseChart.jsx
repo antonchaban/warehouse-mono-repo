@@ -7,10 +7,9 @@ const WarehouseChart = () => {
     const [data, setData] = useState([]);
 
     useEffect(() => {
-        // Замініть URL на свій, якщо у вас інший порт
         fetch('http://localhost:8080/api/admin/warehouses/stats', {
             headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('token') // Якщо є авторизація
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
             }
         })
             .then(res => res.json())

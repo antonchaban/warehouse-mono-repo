@@ -52,19 +52,15 @@ public class AuthController {
 
         User user = new User();
         user.setUsername(request.username());
-        // ВИПРАВЛЕНО: поле в класі називається password, хоча колонка password_hash
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setEmail(request.email());
         user.setCreatedAt(LocalDateTime.now());
 
-        // ВИПРАВЛЕНО: для примітива boolean lombok робить setActive
         user.setActive(true);
 
-        // Отримуємо роль
         Role role = roleRepository.findByName("ROLE_LOGISTICIAN")
                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
 
-        // Ініціалізуємо сет ролей (бо він може бути null) і додаємо роль
         Set<Role> roles = new HashSet<>();
         roles.add(role);
         user.setRoles(roles);

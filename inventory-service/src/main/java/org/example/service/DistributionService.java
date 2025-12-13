@@ -26,18 +26,12 @@ public class DistributionService {
     public void applyDistributionPlan(DistributionPlan plan) {
         log.info("Processing plan for Request ID: {}", plan.getRequestId());
 
-        // --- ВИПРАВЛЕННЯ ---
-        // 1. Отримуємо "сире" значення
         long rawSourceId = plan.getSourceId();
-
-        // 2. Визначаємо фінальне значення (використовуємо тернарний оператор)
-        // Тепер finalSourceId присвоюється лише один раз і вважається "effectively final"
         final long sourceId = (rawSourceId == 0) ? 1L : rawSourceId;
 
         if (rawSourceId == 0) {
             log.warn("Warning: Source ID is 0! Using fallback ID = 1.");
         }
-        // -------------------
 
         Warehouse sourceWarehouse = warehouseRepository.findById(sourceId)
                 .orElseThrow(() -> new RuntimeException("Source warehouse not found: " + sourceId));
@@ -52,7 +46,6 @@ public class DistributionService {
             Product product = productRepository.findById(prodId)
                     .orElseThrow(() -> new RuntimeException("Product not found: " + prodId));
 
-            // Створення Shipment
             Shipment shipment = new Shipment();
             shipment.setSource(sourceWarehouse);
             shipment.setDestination(destWarehouse);
@@ -63,7 +56,6 @@ public class DistributionService {
 
             shipment = shipmentRepository.save(shipment);
 
-            // Створення ShipmentItem
             ShipmentItem item = new ShipmentItem();
             item.setShipment(shipment);
             item.setProduct(product);

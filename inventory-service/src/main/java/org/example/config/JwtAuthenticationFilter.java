@@ -20,7 +20,6 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    // ВИПРАВЛЕНО: Використовуємо JwtTokenProvider замість старого JwtService
     private final JwtTokenProvider tokenProvider;
     private final UserDetailsService userDetailsService;
 
@@ -32,16 +31,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String jwt = getJwtFromRequest(request);
 
-            // Перевіряємо валідність токена через новий провайдер
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
 
-                // Отримуємо юзернейм з токена
                 String username = tokenProvider.getUsernameFromJWT(jwt);
 
-                // Завантажуємо користувача з БД
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                // Встановлюємо аутентифікацію в контекст Spring Security
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
 
@@ -50,7 +45,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception ex) {
-            // Можна залогувати: "Could not set user authentication in security context"
             logger.error("Could not set user authentication in security context", ex);
         }
 

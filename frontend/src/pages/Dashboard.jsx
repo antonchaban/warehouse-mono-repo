@@ -205,15 +205,12 @@ export default function Dashboard() {
                     </div>
                 )}
 
-                {/* 👇 3. ВСТАВКА ГРАФІКІВ ТУТ */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
                     <h2 className="text-lg font-semibold mb-4 text-slate-700 flex items-center gap-2">
                         <PieChart size={20} className="text-indigo-600"/> Warehouse Utilization
                     </h2>
-                    {/* Виклик компонента */}
                     <WarehouseChart />
                 </div>
-                {/* ------------------------- */}
 
                 {/* Control Panel */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">

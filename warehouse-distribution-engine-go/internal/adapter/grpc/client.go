@@ -81,15 +81,11 @@ func (c *Client) SendPlan(ctx context.Context, plan algorithm.DistributionPlan, 
 	}
 
 	req := &pb.DistributionPlan{
-		RequestId: plan.RequestID, // Бажано брати реальний ID, якщо він є в плані
-
-		// 👇 ОСЬ ГОЛОВНА ЗМІНА 👇
-		SourceId: sourceID,
-		// 👆 Тепер Java знатиме, з якого складу це прийшло
-
+		RequestId:        plan.RequestID,
+		SourceId:         sourceID,
 		Moves:            protoMoves,
 		UnallocatedItems: protoUnallocated,
-		GeneratedAt:      time.Now().Unix(), // Корисно додати час
+		GeneratedAt:      time.Now().Unix(),
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)

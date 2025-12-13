@@ -50,20 +50,20 @@ func (s *Service) CalculateDistribution(ctx context.Context, requestID string, s
 		"supply_id", supplyID,
 	)
 
-	// 1. 👇 ОТРИМУЄМО ID СКЛАДУ З БАЗИ (НОВЕ)
+	// 1. Get warehouse ID from database
 	sourceID, err := s.provider.GetWarehouseIDBySupplyID(ctx, supplyID)
 	if err != nil {
 		return fmt.Errorf("failed to determine source warehouse: %w", err)
 	}
 	s.logger.Info("identified source warehouse", "source_id", sourceID)
 
-	// 2. Отримуємо стан світу
+	// 2. Get world state
 	warehouses, err := s.provider.FetchWorldState(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to fetch world state: %w", err)
 	}
 
-	// 3. Отримуємо товари
+	// 3. Get pending items
 	items, err := s.provider.FetchPendingItems(ctx, supplyID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch pending items: %w", err)
@@ -71,10 +71,10 @@ func (s *Service) CalculateDistribution(ctx context.Context, requestID string, s
 
 	s.logger.Info("data loaded", "warehouses", len(warehouses), "items", len(items))
 
-	// 4. Рахуємо
+	// 4. Calculate distribution
 	plan := s.algo.Distribute(requestID, warehouses, items)
 
-	// 5. Відправляємо (тут sourceID вже є!)
+	// 5. Send result
 	if err := s.sender.SendPlan(ctx, plan, sourceID); err != nil {
 		return fmt.Errorf("failed to send distribution plan: %w", err)
 	}

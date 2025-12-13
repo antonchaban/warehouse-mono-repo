@@ -8,8 +8,8 @@ import (
 )
 
 // Baseline Algorithm (First-Fit)
-func DistributeFirstFit(warehouses []*Warehouse, items []Product) DistributionPlan {
-	plan := DistributionPlan{Moves: []Move{}}
+func DistributeFirstFit(requestID string, warehouses []*Warehouse, items []Product) DistributionPlan {
+	plan := DistributionPlan{RequestID: requestID, Moves: []Move{}}
 
 	whCopies := make([]*Warehouse, len(warehouses))
 	for i, w := range warehouses {
@@ -92,9 +92,10 @@ func calculateCV(warehouses []*Warehouse, plan DistributionPlan) float64 {
 
 func TestCompareAlgorithms(t *testing.T) {
 	warehouses, items := generateScenario()
+	requestID := "benchmark-test"
 
 	// A. First-Fit
-	baselinePlan := DistributeFirstFit(warehouses, items)
+	baselinePlan := DistributeFirstFit(requestID, warehouses, items)
 	baselineCV := calculateCV(warehouses, baselinePlan)
 
 	// B. WFD
@@ -104,13 +105,13 @@ func TestCompareAlgorithms(t *testing.T) {
 	}
 
 	packer := NewWFDAlgorithm()
-	wfdPlan := packer.Distribute(whForWFD, items)
+	wfdPlan := packer.Distribute(requestID, whForWFD, items)
 	wfdCV := calculateCV(whForWFD, wfdPlan)
 
-	fmt.Println("\n=== РЕЗУЛЬТАТИ ЕКСПЕРИМЕНТУ (Load Balancing) ===")
-	fmt.Printf("Вхідні дані: %d складів, %d товарів (Load ~50%%)\n", len(warehouses), len(items))
+	fmt.Println("\n=== EXPERIMENT RESULTS (Load Balancing) ===")
+	fmt.Printf("Input data: %d warehouses, %d items (Load ~50%%)\n", len(warehouses), len(items))
 	fmt.Println("-------------------------------------------------------")
-	fmt.Printf("| %-15s | %-12s | %-12s |\n", "Алгоритм", "CV (Дисбаланс)", "Unallocated")
+	fmt.Printf("| %-15s | %-12s | %-12s |\n", "Algorithm", "CV (Imbalance)", "Unallocated")
 	fmt.Println("-------------------------------------------------------")
 	fmt.Printf("| %-15s | %-12.4f | %-12d |\n", "First-Fit", baselineCV, len(baselinePlan.UnallocatedItems))
 	fmt.Printf("| %-15s | %-12.4f | %-12d |\n", "WFD (Proposed)", wfdCV, len(wfdPlan.UnallocatedItems))
@@ -118,8 +119,8 @@ func TestCompareAlgorithms(t *testing.T) {
 
 	if wfdCV < baselineCV {
 		improvement := (baselineCV - wfdCV) / baselineCV * 100
-		t.Logf("Успіх! WFD розподілив навантаження на %.2f%% рівномірніше.", improvement)
+		t.Logf("Success! WFD distributed load %.2f%% more evenly.", improvement)
 	} else {
-		t.Log("WFD не показав кращого балансування.")
+		t.Log("WFD did not show better balancing.")
 	}
 }

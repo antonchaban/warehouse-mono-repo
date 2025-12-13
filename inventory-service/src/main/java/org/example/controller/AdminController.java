@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin")
-@PreAuthorize("hasRole('ADMIN')") // Тільки адмін може створювати
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
     @Autowired private WarehouseRepository warehouseRepository;
@@ -25,20 +25,17 @@ public class AdminController {
     @Autowired private SupplyItemRepository supplyItemRepository;
     @Autowired private ShipmentItemRepository shipmentItemRepository;
 
-    // 👇 НОВИЙ ЕНДПОІНТ ДЛЯ ГРАФІКІВ
     @GetMapping("/warehouses/stats")
     public ResponseEntity<List<WarehouseStatDto>> getWarehouseStats() {
         List<Warehouse> warehouses = warehouseRepository.findAll();
         List<WarehouseStatDto> stats = new ArrayList<>();
 
         for (Warehouse w : warehouses) {
-            // Викликаємо наш SQL запит
             double usedVolume = shipmentItemRepository.calculateUsedVolumeByWarehouse(w.getId());
             double total = w.getTotalCapacity();
 
-            // Рахуємо вільне місце
             double free = total - usedVolume;
-            if (free < 0) free = 0; // На всяк випадок
+            if (free < 0) free = 0;
 
             double percentage = (total > 0) ? (usedVolume / total) * 100 : 0;
 
@@ -56,24 +53,16 @@ public class AdminController {
 
     @PostMapping("/supplies")
     public ResponseEntity<?> createSupply(@RequestBody CreateRequest.Supply request) {
-        // 1. Створюємо "шапку" поставки
         Supply supply = new Supply();
         supply.setWarehouseId(request.warehouseId());
-        // supply.setStatus(SupplyStatus.RECEIVED); // Краще використовувати Enum, якщо він є
-        supply.setStatus(SupplyStatus.valueOf("RECEIVED")); // Або String, як у вас було в попередніх версіях
+        supply.setStatus(SupplyStatus.valueOf("RECEIVED"));
         supply.setArrivalDate(java.time.LocalDateTime.now());
         supply.setCreatedBy(getCurrentUsername());
 
-        supply = supplyRepository.save(supply); // Отримуємо ID (наприклад, 557)
+        supply = supplyRepository.save(supply);
 
-        // 2. Додаємо товари в цю поставку
         SupplyItem item = new SupplyItem();
-
-        // --- ВИПРАВЛЕННЯ ТУТ ---
-        // item.setId(supply.getId()); <--- БУЛО (Неправильно: це перезаписує ID самого товару)
-
-        item.setSupply(supply); // <--- СТАЛО (Правильно: ми пов'язуємо товар з поставкою)
-        // -----------------------
+        item.setSupply(supply);
 
         item.setProductId(request.productId());
         item.setQuantity(request.quantity());

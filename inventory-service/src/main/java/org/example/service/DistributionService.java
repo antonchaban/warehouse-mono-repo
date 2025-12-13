@@ -6,8 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.entity.*;
 import org.example.grpc.DistributionPlan;
 import org.example.grpc.Move;
+import org.example.repository.ProductRepository;
 import org.example.repository.ShipmentRepository;
 import org.example.repository.SupplyRepository;
+import org.example.repository.WarehouseRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -21,43 +23,38 @@ import java.util.stream.Collectors;
 public class DistributionService {
 
     private final ShipmentRepository shipmentRepository;
-    private final SupplyRepository supplyRepository;
+    private final WarehouseRepository warehouseRepository;
+    private final ProductRepository productRepository;
 
     @Transactional
     public void applyDistributionPlan(DistributionPlan plan) {
-        log.info("Applying distribution plan for Request ID: {}, Moves: {}",
-                plan.getRequestId(), plan.getMovesCount());
+        Warehouse sourceWarehouse = warehouseRepository.findById(1L)
+                .orElseThrow(() -> new RuntimeException("Source warehouse not found"));
 
-        Map<Long, List<Move>> movesByDestination = plan.getMovesList().stream()
-                .collect(Collectors.groupingBy(move -> Long.parseLong(move.getWarehouseId())));
+        for (Move move : plan.getMovesList()) {
+            Long destId = Long.parseLong(move.getWarehouseId());
+            Long prodId = Long.parseLong(move.getProductId());
 
-        List<Shipment> shipmentsToSave = new ArrayList<>();
+            Warehouse destWarehouse = warehouseRepository.findById(destId)
+                    .orElseThrow(() -> new RuntimeException("Destination warehouse not found: " + destId));
 
-        for (Map.Entry<Long, List<Move>> entry : movesByDestination.entrySet()) {
-            Long destinationId = entry.getKey();
-            List<Move> moves = entry.getValue();
+            Product product = productRepository.findById(prodId)
+                    .orElseThrow(() -> new RuntimeException("Product not found: " + prodId));
 
             Shipment shipment = new Shipment();
-            shipment.setDestinationId(destinationId);
-            shipment.setStatus(ShipmentStatus.PLANNED);
+            shipment.setSource(sourceWarehouse);
+            shipment.setDestination(destWarehouse);
+            shipment.setStatus("PLANNED");
 
-            shipment.setSourceId(1L);
+            shipment.setCreatedBy("system_algo");
+            shipment.setLastModifiedBy("system_algo");
 
-            List<ShipmentItem> items = new ArrayList<>();
-            for (Move move : moves) {
-                ShipmentItem item = new ShipmentItem();
-                item.setShipment(shipment);
-                item.setProductId(Long.parseLong(move.getProductId()));
-                item.setQuantity(move.getQuantity());
-                items.add(item);
-            }
+            shipment = shipmentRepository.save(shipment);
 
-            shipment.setItems(items);
-            shipmentsToSave.add(shipment);
+            ShipmentItem item = new ShipmentItem();
+            item.setShipment(shipment);
+            item.setProduct(product);
+            item.setQuantity(move.getQuantity());
         }
-
-        shipmentRepository.saveAll(shipmentsToSave);
-
-        log.info("Successfully created {} shipments from plan", shipmentsToSave.size());
     }
 }

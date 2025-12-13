@@ -78,5 +78,13 @@ services:
         condition: service_healthy
     restart: on-failure
 
+  frontend:
+    build: ./frontend
+    container_name: warehouse-frontend
+    ports:
+      - "3000:80"  # Сайт буде доступний на localhost:3000
+    depends_on:
+      - inventory-service
+
 volumes:
   postgres_data:

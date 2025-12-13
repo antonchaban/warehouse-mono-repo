@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Play, RefreshCw, Box, ArrowRight, Truck, Plus, Warehouse, Package } from 'lucide-react';
+// 👇 1. Додав іконку PieChart для краси
+import { LogOut, Play, RefreshCw, Box, ArrowRight, Truck, Plus, Warehouse, Package, PieChart } from 'lucide-react';
 import api from '../api';
+
+// 👇 2. Імпорт вашого нового компонента (перевірте шлях, якщо він в іншій папці)
+import WarehouseChart from './WarehouseChart';
 
 export default function Dashboard() {
     const [shipments, setShipments] = useState([]);
@@ -25,10 +29,8 @@ export default function Dashboard() {
                 quantity: parseInt(newSupplyQty)
             });
 
-            console.log("Server response:", res.data); // <-- Дивимось в консоль, що прийшло
+            console.log("Server response:", res.data);
 
-            // Більш безпечний спосіб отримати ID
-            // Сервер повертає: "Supply created with ID: 123"
             let newId = 'unknown';
             if (typeof res.data === 'string' && res.data.includes('ID:')) {
                 const parts = res.data.split('ID:');
@@ -36,24 +38,21 @@ export default function Dashboard() {
                     newId = parts[1].trim();
                 }
             } else {
-                // Якщо сервер повернув щось інше, просто беремо supplyId, який ми ввели, або 1
                 newId = '1';
             }
 
             alert(`Supply Created! ID from server: ${newId}`);
 
-            // Автоматично підставляємо цей ID у поле запуску
             if (newId !== 'unknown') {
                 setSupplyId(newId);
             }
 
-            // Очищаємо поля
             setNewSupplyWhId('');
             setNewSupplyProdId('');
             setNewSupplyQty('');
 
         } catch (e) {
-            console.error(e); // <-- Виводимо справжню помилку в консоль
+            console.error(e);
             alert('Supply might be created, but frontend failed to parse response. Check console.');
         }
     };
@@ -69,7 +68,7 @@ export default function Dashboard() {
 
     useEffect(() => {
         fetchShipments();
-        const interval = setInterval(fetchShipments, 2000); // Оновлення кожні 2 сек
+        const interval = setInterval(fetchShipments, 2000);
         return () => clearInterval(interval);
     }, []);
 
@@ -82,15 +81,13 @@ export default function Dashboard() {
         setLoading(true);
         try {
             await api.post('/v1/distribution/calculate', { supplyId: parseInt(supplyId) });
-            // Не робимо alert, просто чекаємо оновлення таблиці
         } catch (err) {
             alert('Error triggering calculation. Check permissions or supply ID.');
         } finally {
-            setTimeout(() => setLoading(false), 1000); // Маленька затримка для візуального ефекту
+            setTimeout(() => setLoading(false), 1000);
         }
     };
 
-    // Функції створення
     const createWarehouse = async () => {
         try {
             await api.post('/admin/warehouses', { capacity: parseFloat(newWhCapacity) });
@@ -133,7 +130,7 @@ export default function Dashboard() {
                     </button>
                 </div>
 
-                {/* Секція створення (Показується тільки якщо натиснуто кнопку) */}
+                {/* Секція створення */}
                 {showForms && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         {/* Create Warehouse */}
@@ -170,7 +167,7 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        {/* Create Supply (Incoming Shipment) */}
+                        {/* Create Supply */}
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 md:col-span-2 bg-gradient-to-r from-blue-50 to-white">
                             <h3 className="font-bold mb-4 flex items-center gap-2 text-slate-700">
                                 <Truck size={20} className="text-blue-600"/> Register Incoming Supply
@@ -207,6 +204,16 @@ export default function Dashboard() {
                         </div>
                     </div>
                 )}
+
+                {/* 👇 3. ВСТАВКА ГРАФІКІВ ТУТ */}
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
+                    <h2 className="text-lg font-semibold mb-4 text-slate-700 flex items-center gap-2">
+                        <PieChart size={20} className="text-indigo-600"/> Warehouse Utilization
+                    </h2>
+                    {/* Виклик компонента */}
+                    <WarehouseChart />
+                </div>
+                {/* ------------------------- */}
 
                 {/* Control Panel */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
@@ -262,7 +269,7 @@ export default function Dashboard() {
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                             {shipments
-                                .filter(s => s.sourceId !== s.destinationId) // <-- ФІЛЬТР ТУТ (приховує WH1->WH1)
+                                .filter(s => s.sourceId !== s.destinationId)
                                 .map((s) => (
                                     <tr key={s.id} className="hover:bg-slate-50 transition-colors">
                                         <td className="px-6 py-4 font-medium text-slate-700">#{s.id}</td>

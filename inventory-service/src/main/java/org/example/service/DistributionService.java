@@ -6,10 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.entity.*;
 import org.example.grpc.DistributionPlan;
 import org.example.grpc.Move;
-import org.example.repository.ProductRepository;
-import org.example.repository.ShipmentItemRepository;
-import org.example.repository.ShipmentRepository;
-import org.example.repository.WarehouseRepository;
+import org.example.repository.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -23,6 +20,7 @@ public class DistributionService {
     private final WarehouseRepository warehouseRepository;
     private final ProductRepository productRepository;
     private final ShipmentItemRepository shipmentItemRepository;
+    private final SupplyRepository supplyRepository;
 
     @Transactional
     public void applyDistributionPlan(DistributionPlan plan) {
@@ -74,6 +72,27 @@ public class DistributionService {
             shipmentItemRepository.save(item);
 
             log.info("Saved Shipment #{} ({} -> {})", shipment.getId(), sourceId, destId);
+        }
+        if (plan.getUnallocatedItemsCount() > 0) {
+            log.warn("⚠️ ALARM: Some items could not be allocated!");
+
+            for (org.example.grpc.UnallocatedItem unallocated : plan.getUnallocatedItemsList()) {
+                log.error("❌ Product ID {} (Volume: {}) failed. Reason: {}",
+                        unallocated.getProductId(),
+                        unallocated.getVolumeM3(),
+                        unallocated.getReason()
+                );
+
+                // todo save to DB table for unallocated items
+            }
+        } else {
+            log.info("✅ Perfect! All items were allocated successfully.");
+        }
+        Supply supply = supplyRepository.findById(plan.getSourceId()).orElse(null);
+        if (supply != null) {
+            supply.setStatus(SupplyStatus.valueOf("PROCESSED"));
+            supplyRepository.save(supply);
+            log.info("Supply #{} status updated to PROCESSED", supply.getId());
         }
     }
 }

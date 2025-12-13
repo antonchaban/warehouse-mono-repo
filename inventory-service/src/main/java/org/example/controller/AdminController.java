@@ -1,8 +1,12 @@
 package org.example.controller;
 
 import org.example.dto.CreateRequest;
+import org.example.dto.WarehouseStatDto;
 import org.example.entity.*;
 import org.example.repository.*;
+
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +23,36 @@ public class AdminController {
     @Autowired private ProductRepository productRepository;
     @Autowired private SupplyRepository supplyRepository;
     @Autowired private SupplyItemRepository supplyItemRepository;
+    @Autowired private ShipmentItemRepository shipmentItemRepository;
+
+    // 👇 НОВИЙ ЕНДПОІНТ ДЛЯ ГРАФІКІВ
+    @GetMapping("/warehouses/stats")
+    public ResponseEntity<List<WarehouseStatDto>> getWarehouseStats() {
+        List<Warehouse> warehouses = warehouseRepository.findAll();
+        List<WarehouseStatDto> stats = new ArrayList<>();
+
+        for (Warehouse w : warehouses) {
+            // Викликаємо наш SQL запит
+            double usedVolume = shipmentItemRepository.calculateUsedVolumeByWarehouse(w.getId());
+            double total = w.getTotalCapacity();
+
+            // Рахуємо вільне місце
+            double free = total - usedVolume;
+            if (free < 0) free = 0; // На всяк випадок
+
+            double percentage = (total > 0) ? (usedVolume / total) * 100 : 0;
+
+            stats.add(WarehouseStatDto.builder()
+                    .name("Warehouse #" + w.getId())
+                    .totalCapacity(total)
+                    .usedCapacity(usedVolume)
+                    .freeCapacity(free)
+                    .utilizationPercentage(percentage)
+                    .build());
+        }
+
+        return ResponseEntity.ok(stats);
+    }
 
     @PostMapping("/supplies")
     public ResponseEntity<?> createSupply(@RequestBody CreateRequest.Supply request) {

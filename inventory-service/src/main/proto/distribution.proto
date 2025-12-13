@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package distribution;
+
+// --- Java Specific Options ---
+option java_multiple_files = true;
+option java_package = "org.example.grpc";
+option java_outer_classname = "DistributionProto";
+
+// Service Definition
+service DistributionResultReceiver {
+  rpc ProcessPlan (DistributionPlan) returns (Empty);
+}
+
+// Messages
+message Empty {}
+
+message DistributionPlan {
+  string request_id = 1;
+  repeated Move moves = 2;
+  repeated UnallocatedItem unallocated_items = 3;
+  int64 generated_at = 4;
+}
+
+message Move {
+  string product_id = 1;
+  string warehouse_id = 2; // Destination
+  double volume_m3 = 3;
+  int32 quantity = 4;
+}
+
+message UnallocatedItem {
+  string product_id = 1;
+  double volume_m3 = 2;
+  string reason = 3;
+}

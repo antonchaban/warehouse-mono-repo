@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # --- 1. INFRASTRUCTURE (Database) ---
+  postgres:
+    image: postgres:16-alpine
+    container_name: warehouse-db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: warehouse_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d warehouse_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # --- 2. INFRASTRUCTURE (Messaging) ---
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: warehouse-mq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # --- 3. JAVA SERVICE (Inventory & Security Core) ---
+  inventory-service:
+    build:
+      context: ./inventory-service
+      dockerfile: Dockerfile
+    container_name: inventory-service
+    ports:
+      - "8080:8080"
+      - "9090:9090"
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/warehouse_db
+      DATABASE_USER: user
+      DATABASE_PASSWORD: password
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: on-failure
+
+  # --- 4. GO SERVICE (Distribution Engine) ---
+  distribution-engine:
+    build:
+      context: ./warehouse-distribution-engine-go
+      dockerfile: Dockerfile
+    container_name: distribution-engine
+    environment:
+      DATABASE_URL: postgres://user:password@postgres:5432/warehouse_db
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      RABBITMQ_QUEUE: calculation.requests
+      JAVA_SERVICE_ADDR: inventory-service:9090
+      MOCK_OUTPUT: "false"
+    depends_on:
+      inventory-service:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
+volumes:
+  postgres_data:

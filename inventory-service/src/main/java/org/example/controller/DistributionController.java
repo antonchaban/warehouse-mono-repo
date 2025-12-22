@@ -33,7 +33,7 @@ public class DistributionController {
     private ShipmentRepository shipmentRepository;
 
     @PostMapping("/calculate")
-    @PreAuthorize("hasRole('LOGISTICIAN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LOGISTICIAN')")
     public ResponseEntity<?> triggerCalculation(@RequestBody CalculateRequest request) {
 
         Supply supply = supplyRepository.findById(request.getSupplyId())
@@ -55,7 +55,7 @@ public class DistributionController {
     }
 
     @GetMapping("/shipments")
-    @PreAuthorize("hasAnyRole('LOGISTICIAN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LOGISTICIAN', 'STOREKEEPER')")
     public ResponseEntity<List<ShipmentResponse>> getAllShipments() {
         List<Shipment> shipments = shipmentRepository.findAll();
 

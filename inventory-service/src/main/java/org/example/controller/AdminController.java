@@ -1,12 +1,16 @@
 package org.example.controller;
 
 import org.example.dto.CreateRequest;
+import org.example.dto.RoleUpdateRequest;
 import org.example.dto.WarehouseStatDto;
 import org.example.entity.*;
 import org.example.repository.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin")
-@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
     @Autowired private WarehouseRepository warehouseRepository;
@@ -24,8 +27,11 @@ public class AdminController {
     @Autowired private SupplyRepository supplyRepository;
     @Autowired private SupplyItemRepository supplyItemRepository;
     @Autowired private ShipmentItemRepository shipmentItemRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private RoleRepository roleRepository;
 
     @GetMapping("/warehouses/stats")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LOGISTICIAN', 'STOREKEEPER')")
     public ResponseEntity<List<WarehouseStatDto>> getWarehouseStats() {
         List<Warehouse> warehouses = warehouseRepository.findAll();
         List<WarehouseStatDto> stats = new ArrayList<>();
@@ -56,6 +62,7 @@ public class AdminController {
     }
 
     @PostMapping("/supplies")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LOGISTICIAN')")
     public ResponseEntity<?> createSupply(@RequestBody CreateRequest.Supply request) {
         Supply supply = new Supply();
         supply.setWarehouseId(request.warehouseId());
@@ -77,6 +84,7 @@ public class AdminController {
     }
 
     @PostMapping("/warehouses")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createWarehouse(@RequestBody CreateRequest.Warehouse request) {
         Warehouse w = new Warehouse();
         w.setTotalCapacity(request.capacity());
@@ -86,6 +94,7 @@ public class AdminController {
     }
 
     @PostMapping("/products")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createProduct(@RequestBody CreateRequest.Product request) {
         Product p = new Product();
         p.setVolumeM3(request.volume());
@@ -95,16 +104,19 @@ public class AdminController {
     }
 
     @GetMapping("/warehouses")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LOGISTICIAN', 'STOREKEEPER')")
     public ResponseEntity<List<Warehouse>> getAllWarehouses() {
         return ResponseEntity.ok(warehouseRepository.findAll());
     }
 
     @GetMapping("/products")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LOGISTICIAN', 'STOREKEEPER')")
     public ResponseEntity<List<Product>> getAllProducts() {
         return ResponseEntity.ok(productRepository.findAll());
     }
 
     @GetMapping("/supplies")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LOGISTICIAN', 'STOREKEEPER')")
     public ResponseEntity<List<Supply>> getAllSupplies() {
         List<Supply> supplies = supplyRepository.findAll();
         supplies.sort((a, b) -> b.getId().compareTo(a.getId()));
@@ -114,5 +126,28 @@ public class AdminController {
     private String getCurrentUsername() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return auth != null ? auth.getName() : "system";
+    }
+
+    @GetMapping("/users")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<User>> getAllUsers() {
+        return ResponseEntity.ok(userRepository.findAll());
+    }
+
+    @PutMapping("/users/{id}/role")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateUserRole(@PathVariable Long id, @RequestBody RoleUpdateRequest request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Role role = roleRepository.findByName(request.roleName())
+                .orElseThrow(() -> new RuntimeException("Role not found"));
+
+        Set<Role> roles = new HashSet<>();
+        roles.add(role);
+        user.setRoles(roles);
+
+        userRepository.save(user);
+        return ResponseEntity.ok("User role updated to " + request.roleName());
     }
 }

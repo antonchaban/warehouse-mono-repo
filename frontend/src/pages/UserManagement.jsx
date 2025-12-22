@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Users, Save, Shield } from 'lucide-react'; // Іконки
+import { Users, Save, Shield } from 'lucide-react';
 import api from '../api';
 
 export default function UserManagement() {
@@ -23,7 +23,7 @@ export default function UserManagement() {
         try {
             await api.put(`/admin/users/${userId}/role`, { roleName: newRole });
             alert(`Role updated to ${newRole}`);
-            fetchUsers(); // Оновлюємо список
+            fetchUsers(); // Refresh list
         } catch (err) {
             console.error(err);
             alert("Failed to update role");
@@ -56,7 +56,7 @@ export default function UserManagement() {
                                 <td className="px-6 py-4 font-bold text-slate-700">{user.username}</td>
                                 <td className="px-6 py-4 text-slate-600">{user.email}</td>
                                 <td className="px-6 py-4">
-                                    {/* Показуємо поточну роль гарним бейджиком */}
+                                    {/* Show current role as badge */}
                                     <span className={`px-2 py-1 rounded text-xs font-bold border ${
                                         user.roles[0]?.name === 'ROLE_ADMIN' ? 'bg-purple-100 text-purple-700 border-purple-200' :
                                             user.roles[0]?.name === 'ROLE_LOGISTICIAN' ? 'bg-blue-100 text-blue-700 border-blue-200' :

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-const COLORS = ['#00C49F', '#FF8042']; // Зелений (вільно), Помаранчевий (зайнято)
+const COLORS = ['#00C49F', '#FF8042']; // Green (free), Orange (used)
 
 const WarehouseChart = () => {
     const [data, setData] = useState([]);

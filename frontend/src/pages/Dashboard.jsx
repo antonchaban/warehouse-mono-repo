@@ -20,7 +20,7 @@ const getUserRole = () => {
         console.log("Decoded Token Payload:", payload); // <-- Додайте це для налагодження
 
         if (Array.isArray(roles) && roles.length > 0) {
-            return roles[0]; // Поверне "ROLE_STOREKEEPER"
+            return roles[0];
         }
         return null;
     } catch (e) {
@@ -48,7 +48,7 @@ export default function Dashboard() {
     const [newWhCapacity, setNewWhCapacity] = useState('');
     const [newProdVolume, setNewProdVolume] = useState('');
 
-    // Визначаємо роль при завантаженні
+    // Determine role on load
     useEffect(() => {
         const role = getUserRole();
         setUserRole(role);
@@ -56,7 +56,7 @@ export default function Dashboard() {
 
     const fetchAllData = async () => {
         try {
-            // Всі ці запити тепер дозволені для STOREKEEPER на бекенді
+            // All these requests are now allowed for STOREKEEPER on backend
             const resShipments = await api.get('/v1/distribution/shipments');
             setShipments(Array.isArray(resShipments.data) ? resShipments.data : []);
 
@@ -79,7 +79,7 @@ export default function Dashboard() {
         return () => clearInterval(interval);
     }, []);
 
-    // ... (Функції createSupply, createWarehouse, handleCalculate залишаємо без змін) ...
+    // createSupply, createWarehouse, handleCalculate functions
     const createSupply = async () => {
         try {
             const res = await api.post('/admin/supplies', {
@@ -89,7 +89,7 @@ export default function Dashboard() {
             });
 
             let newId = 'unknown';
-            // Безпечна перевірка відповіді
+            // Safe response check
             if (res.data && typeof res.data === 'string' && res.data.includes('ID:')) {
                 newId = res.data.split('ID:')[1].trim();
             }
@@ -364,7 +364,7 @@ export default function Dashboard() {
                                 <th className="px-6 py-2">Route</th>
                                 <th className="px-6 py-2">Status</th>
                                 <th className="px-6 py-2">Cargo</th>
-                                <th className="px-6 py-2">Actions</th> {/* 👈 НОВА КОЛОНКА */}
+                                <th className="px-6 py-2">Actions</th>
                             </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -397,7 +397,7 @@ export default function Dashboard() {
                                             ))}
                                         </td>
 
-                                        {/* 👇 ЛОГІКА КНОПОК */}
+                                        {/* Button logic */}
                                         <td className="px-6 py-3">
                                             {s.status === 'PLANNED' && (
                                                 <button

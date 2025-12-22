@@ -38,7 +38,7 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-func (c *Client) SendPlan(ctx context.Context, plan algorithm.DistributionPlan, sourceID int64) error {
+func (c *Client) SendPlan(ctx context.Context, plan algorithm.DistributionPlan, sourceID int64, supplyID int64) error {
 	type moveKey struct {
 		WarehouseID string
 		ProductID   string
@@ -83,6 +83,7 @@ func (c *Client) SendPlan(ctx context.Context, plan algorithm.DistributionPlan, 
 	req := &pb.DistributionPlan{
 		RequestId:        plan.RequestID,
 		SourceId:         sourceID,
+		SupplyId:         supplyID,
 		Moves:            protoMoves,
 		UnallocatedItems: protoUnallocated,
 		GeneratedAt:      time.Now().Unix(),

@@ -44,7 +44,7 @@ func main() {
 	algo := algorithm.NewWFDAlgorithm()
 	var sender app.ResultSender
 
-	// 3. gRPC Client Logic (ВИПРАВЛЕНО: прибрано дублювання)
+	// 3. gRPC Client Logic
 	if cfg.MockOutput {
 		logger.Info("using MOCK sender (results will be logged, not sent via network)")
 		sender = &noopSender{l: logger}
@@ -103,10 +103,11 @@ type noopSender struct {
 	l *slog.Logger
 }
 
-func (n *noopSender) SendPlan(ctx context.Context, plan algorithm.DistributionPlan, sourceID int64) error {
+func (n *noopSender) SendPlan(ctx context.Context, plan algorithm.DistributionPlan, sourceID int64, supplyID int64) error {
 	n.l.Info("mock sender: plan calculated",
 		"moves", len(plan.Moves),
 		"source_id", sourceID,
+		"supply_id", supplyID,
 	)
 	return nil
 }

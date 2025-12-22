@@ -1,5 +1,6 @@
 package org.example.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -13,6 +14,7 @@ public class SupplyItem {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "supply_id", nullable = false)
+    @JsonIgnore
     private Supply supply;
 
     @Column(name = "product_id", nullable = false)

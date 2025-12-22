@@ -31,18 +31,22 @@ public class AdminController {
         List<WarehouseStatDto> stats = new ArrayList<>();
 
         for (Warehouse w : warehouses) {
-            double usedVolume = shipmentItemRepository.calculateUsedVolumeByWarehouse(w.getId());
-            double total = w.getTotalCapacity();
+            double allocatedVolume = shipmentItemRepository.calculateUsedVolumeByWarehouse(w.getId());
 
-            double free = total - usedVolume;
+            double pendingVolume = supplyItemRepository.calculatePendingVolumeByWarehouse(w.getId());
+
+            double totalUsed = allocatedVolume + pendingVolume;
+
+            double total = w.getTotalCapacity();
+            double free = total - totalUsed;
             if (free < 0) free = 0;
 
-            double percentage = (total > 0) ? (usedVolume / total) * 100 : 0;
+            double percentage = (total > 0) ? (totalUsed / total) * 100 : 0;
 
             stats.add(WarehouseStatDto.builder()
-                    .name("Warehouse #" + w.getId())
+                    .name("WH-" + w.getId())
                     .totalCapacity(total)
-                    .usedCapacity(usedVolume)
+                    .usedCapacity(totalUsed)
                     .freeCapacity(free)
                     .utilizationPercentage(percentage)
                     .build());
@@ -88,6 +92,23 @@ public class AdminController {
         p.setCreatedBy(getCurrentUsername());
         productRepository.save(p);
         return ResponseEntity.ok("Product created with ID: " + p.getId());
+    }
+
+    @GetMapping("/warehouses")
+    public ResponseEntity<List<Warehouse>> getAllWarehouses() {
+        return ResponseEntity.ok(warehouseRepository.findAll());
+    }
+
+    @GetMapping("/products")
+    public ResponseEntity<List<Product>> getAllProducts() {
+        return ResponseEntity.ok(productRepository.findAll());
+    }
+
+    @GetMapping("/supplies")
+    public ResponseEntity<List<Supply>> getAllSupplies() {
+        List<Supply> supplies = supplyRepository.findAll();
+        supplies.sort((a, b) -> b.getId().compareTo(a.getId()));
+        return ResponseEntity.ok(supplies);
     }
 
     private String getCurrentUsername() {

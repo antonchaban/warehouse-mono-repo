@@ -80,9 +80,48 @@ export default function Dashboard() {
     }, []);
 
     // ... (Функції createSupply, createWarehouse, handleCalculate залишаємо без змін) ...
-    const createSupply = async () => { /* ... код ... */ };
-    const createWarehouse = async () => { /* ... код ... */ };
-    const createProduct = async () => { /* ... код ... */ };
+    const createSupply = async () => {
+        try {
+            const res = await api.post('/admin/supplies', {
+                warehouseId: parseInt(newSupplyWhId),
+                productId: parseInt(newSupplyProdId),
+                quantity: parseInt(newSupplyQty)
+            });
+
+            let newId = 'unknown';
+            // Безпечна перевірка відповіді
+            if (res.data && typeof res.data === 'string' && res.data.includes('ID:')) {
+                newId = res.data.split('ID:')[1].trim();
+            }
+
+            alert(`Supply Created! ID: ${newId}`);
+            if (newId !== 'unknown') setSupplyId(newId);
+
+            setNewSupplyWhId(''); setNewSupplyProdId(''); setNewSupplyQty('');
+            fetchAllData();
+        } catch (e) {
+            console.error(e);
+            alert('Error creating supply. Check console/network.');
+        }
+    };
+
+    const createWarehouse = async () => {
+        try {
+            await api.post('/admin/warehouses', { capacity: parseFloat(newWhCapacity) });
+            alert('Warehouse Created!');
+            setNewWhCapacity('');
+            fetchAllData();
+        } catch (e) { alert('Error creating warehouse'); }
+    };
+
+    const createProduct = async () => {
+        try {
+            await api.post('/admin/products', { volume: parseFloat(newProdVolume) });
+            alert('Product Created!');
+            setNewProdVolume('');
+            fetchAllData();
+        } catch (e) { alert('Error creating product'); }
+    };
     const handleCalculate = async () => {
         setLoading(true);
         try {
@@ -91,6 +130,16 @@ export default function Dashboard() {
             alert('Error: You do not have permission to run the algorithm.');
         } finally {
             setTimeout(() => setLoading(false), 1000);
+        }
+    };
+
+    const handleStatusUpdate = async (id, newStatus) => {
+        try {
+            await api.put(`/inventory/shipments/${id}/status?status=${newStatus}`);
+            fetchAllData();
+        } catch (err) {
+            console.error(err);
+            alert("Failed to update status. Check console.");
         }
     };
 
@@ -300,9 +349,7 @@ export default function Dashboard() {
                     </section>
                 )}
 
-                {/* 5. Таблиця Історії (Видно всім) */}
                 <section className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                    {/* ... (Grid таблиці shipments) ... */}
                     <div className="px-6 py-3 border-b border-slate-100 bg-slate-50/50 flex justify-between">
                         <h2 className="text-sm font-bold text-slate-700 flex items-center gap-2">
                             <Box size={16} className="text-indigo-600"/> Distribution Routes (Results)
@@ -317,7 +364,7 @@ export default function Dashboard() {
                                 <th className="px-6 py-2">Route</th>
                                 <th className="px-6 py-2">Status</th>
                                 <th className="px-6 py-2">Cargo</th>
-                                <th className="px-6 py-2">Time</th>
+                                <th className="px-6 py-2">Actions</th> {/* 👈 НОВА КОЛОНКА */}
                             </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -334,9 +381,13 @@ export default function Dashboard() {
                                             </div>
                                         </td>
                                         <td className="px-6 py-3">
-                                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">
-                                                {s.status}
-                                            </span>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                s.status === 'DELIVERED' ? 'bg-slate-100 text-slate-500 border-slate-200' :
+                                    s.status === 'IN_TRANSIT' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                                        'bg-emerald-50 text-emerald-600 border-emerald-100'
+                            }`}>
+                                {s.status}
+                            </span>
                                         </td>
                                         <td className="px-6 py-3">
                                             {s.items.map((i, idx) => (
@@ -345,8 +396,30 @@ export default function Dashboard() {
                                                 </div>
                                             ))}
                                         </td>
-                                        <td className="px-6 py-3 text-xs text-slate-400 font-mono">
-                                            {new Date(s.createdAt).toLocaleTimeString()}
+
+                                        {/* 👇 ЛОГІКА КНОПОК */}
+                                        <td className="px-6 py-3">
+                                            {s.status === 'PLANNED' && (
+                                                <button
+                                                    onClick={() => handleStatusUpdate(s.id, 'IN_TRANSIT')}
+                                                    className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition shadow-sm"
+                                                >
+                                                    Start Transit
+                                                </button>
+                                            )}
+                                            {s.status === 'IN_TRANSIT' && (
+                                                <button
+                                                    onClick={() => handleStatusUpdate(s.id, 'DELIVERED')}
+                                                    className="px-3 py-1 bg-emerald-600 text-white text-xs rounded hover:bg-emerald-700 transition shadow-sm"
+                                                >
+                                                    Complete
+                                                </button>
+                                            )}
+                                            {s.status === 'DELIVERED' && (
+                                                <span className="text-xs text-slate-400 font-medium flex items-center gap-1">
+                                    ✓ Done
+                                </span>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}

@@ -55,11 +55,10 @@ public class AuthController {
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setEmail(request.email());
         user.setCreatedAt(LocalDateTime.now());
-
         user.setActive(true);
 
-        Role role = roleRepository.findByName("ROLE_LOGISTICIAN")
-                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+        Role role = roleRepository.findByName("ROLE_STOREKEEPER")
+                .orElseThrow(() -> new RuntimeException("Error: Role ROLE_STOREKEEPER is not found."));
 
         Set<Role> roles = new HashSet<>();
         roles.add(role);

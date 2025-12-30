@@ -16,7 +16,11 @@ public class DistributionReceiverImpl extends DistributionResultReceiverGrpc.Dis
     @Override
     public void processPlan(DistributionPlan request, StreamObserver<Empty> responseObserver) {
         try {
-            distributionService.applyDistributionPlan(request);
+            log.info("Received plan from Go. RequestID: {}", request.getRequestId());
+            long supplyId = request.getSupplyId();
+            Long finalSupplyId = (supplyId == 0) ? null : supplyId;
+
+            distributionService.applyDistributionPlan(request, finalSupplyId);
 
             responseObserver.onNext(Empty.newBuilder().build());
             responseObserver.onCompleted();

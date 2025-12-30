@@ -23,18 +23,18 @@ public class DistributionService {
     private final SupplyRepository supplyRepository;
 
     @Transactional
-    public void applyDistributionPlan(DistributionPlan plan) {
+    public void applyDistributionPlan(DistributionPlan plan, Long supplyId) {
         log.info("Processing plan for Request ID: {}", plan.getRequestId());
 
         long rawSourceId = plan.getSourceId();
-        final long sourceId = (rawSourceId == 0) ? 1L : rawSourceId;
+        final long sourceWarehouseId = (rawSourceId == 0) ? 1L : rawSourceId;
 
         if (rawSourceId == 0) {
-            log.warn("Warning: Source ID is 0! Using fallback ID = 1.");
+            log.warn("Warning: Source ID from gRPC is 0! Using fallback Warehouse ID = 1.");
         }
 
-        Warehouse sourceWarehouse = warehouseRepository.findById(sourceId)
-                .orElseThrow(() -> new RuntimeException("Source warehouse not found: " + sourceId));
+        Warehouse sourceWarehouse = warehouseRepository.findById(sourceWarehouseId)
+                .orElseThrow(() -> new RuntimeException("Source warehouse not found: " + sourceWarehouseId));
 
         for (Move move : plan.getMovesList()) {
             Long destId = Long.parseLong(move.getWarehouseId());
@@ -63,8 +63,9 @@ public class DistributionService {
 
             shipmentItemRepository.save(item);
 
-            log.info("Saved Shipment #{} ({} -> {})", shipment.getId(), sourceId, destId);
+            log.info("Saved Shipment #{} (WH-{} -> WH-{})", shipment.getId(), sourceWarehouseId, destId);
         }
+
         if (plan.getUnallocatedItemsCount() > 0) {
             log.warn("⚠️ ALARM: Some items could not be allocated!");
 
@@ -74,17 +75,21 @@ public class DistributionService {
                         unallocated.getVolumeM3(),
                         unallocated.getReason()
                 );
-
-                // todo save to DB table for unallocated items
             }
         } else {
             log.info("✅ Perfect! All items were allocated successfully.");
         }
-        Supply supply = supplyRepository.findById(plan.getSourceId()).orElse(null);
-        if (supply != null) {
-            supply.setStatus(SupplyStatus.valueOf("PROCESSED"));
+
+        if (supplyId != null) {
+            Supply supply = supplyRepository.findById(supplyId)
+                    .orElseThrow(() -> new RuntimeException("Supply not found with ID: " + supplyId));
+
+            supply.setStatus(SupplyStatus.PROCESSED);
             supplyRepository.save(supply);
-            log.info("Supply #{} status updated to PROCESSED", supply.getId());
+
+            log.info("✅ Supply #{} status updated to PROCESSED. Double counting fixed.", supplyId);
+        } else {
+            log.warn("⚠️ Supply ID was null, could not update status!");
         }
     }
 }

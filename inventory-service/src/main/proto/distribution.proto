@@ -21,6 +21,7 @@ message DistributionPlan {
   repeated Move moves = 2;
   repeated UnallocatedItem unallocated_items = 3;
   int64 generated_at = 4;
+  int64 supply_id = 6;
 }
 
 message Move {

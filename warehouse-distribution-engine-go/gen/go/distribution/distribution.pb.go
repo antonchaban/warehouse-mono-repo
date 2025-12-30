@@ -64,6 +64,7 @@ type DistributionPlan struct {
 	Moves            []*Move                `protobuf:"bytes,2,rep,name=moves,proto3" json:"moves,omitempty"`
 	UnallocatedItems []*UnallocatedItem     `protobuf:"bytes,3,rep,name=unallocated_items,json=unallocatedItems,proto3" json:"unallocated_items,omitempty"`
 	GeneratedAt      int64                  `protobuf:"varint,4,opt,name=generated_at,json=generatedAt,proto3" json:"generated_at,omitempty"`
+	SupplyId         int64                  `protobuf:"varint,6,opt,name=supply_id,json=supplyId,proto3" json:"supply_id,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -129,6 +130,13 @@ func (x *DistributionPlan) GetUnallocatedItems() []*UnallocatedItem {
 func (x *DistributionPlan) GetGeneratedAt() int64 {
 	if x != nil {
 		return x.GeneratedAt
+	}
+	return 0
+}
+
+func (x *DistributionPlan) GetSupplyId() int64 {
+	if x != nil {
+		return x.SupplyId
 	}
 	return 0
 }
@@ -266,14 +274,15 @@ var File_api_proto_distribution_proto protoreflect.FileDescriptor
 const file_api_proto_distribution_proto_rawDesc = "" +
 	"\n" +
 	"\x1capi/proto/distribution.proto\x12\fdistribution\"\a\n" +
-	"\x05Empty\"\xe7\x01\n" +
+	"\x05Empty\"\x84\x02\n" +
 	"\x10DistributionPlan\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x01 \x01(\tR\trequestId\x12\x1b\n" +
 	"\tsource_id\x18\x05 \x01(\x03R\bsourceId\x12(\n" +
 	"\x05moves\x18\x02 \x03(\v2\x12.distribution.MoveR\x05moves\x12J\n" +
 	"\x11unallocated_items\x18\x03 \x03(\v2\x1d.distribution.UnallocatedItemR\x10unallocatedItems\x12!\n" +
-	"\fgenerated_at\x18\x04 \x01(\x03R\vgeneratedAt\"\x81\x01\n" +
+	"\fgenerated_at\x18\x04 \x01(\x03R\vgeneratedAt\x12\x1b\n" +
+	"\tsupply_id\x18\x06 \x01(\x03R\bsupplyId\"\x81\x01\n" +
 	"\x04Move\x12\x1d\n" +
 	"\n" +
 	"product_id\x18\x01 \x01(\tR\tproductId\x12!\n" +

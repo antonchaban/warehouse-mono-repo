@@ -18,7 +18,7 @@ type StateProvider interface {
 
 // ResultSender defines the contract for sending the calculation result.
 type ResultSender interface {
-	SendPlan(ctx context.Context, plan algorithm.DistributionPlan, sourceID int64) error
+	SendPlan(ctx context.Context, plan algorithm.DistributionPlan, sourceID int64, supplyID int64) error
 }
 
 // Service is the main orchestrator of the business logic.
@@ -74,8 +74,7 @@ func (s *Service) CalculateDistribution(ctx context.Context, requestID string, s
 	// 4. Calculate distribution
 	plan := s.algo.Distribute(requestID, warehouses, items)
 
-	// 5. Send result
-	if err := s.sender.SendPlan(ctx, plan, sourceID); err != nil {
+	if err := s.sender.SendPlan(ctx, plan, sourceID, supplyID); err != nil {
 		return fmt.Errorf("failed to send distribution plan: %w", err)
 	}
 
